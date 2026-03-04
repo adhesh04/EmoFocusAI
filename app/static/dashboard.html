@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Attention AI | Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --bg: #090c10;
+    --surface: #0d1117;
+    --surface-2: #161b22;
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --accent: #00d4aa;
+    --accent-dim: rgba(0, 212, 170, 0.08);
+    --accent-glow: rgba(0, 212, 170, 0.2);
+    --text-primary: #e6edf3;
+    --text-secondary: #7d8590;
+    --text-muted: #484f58;
+    --red: #ff4757;
+    --amber: #ffa502;
+    --blue: #4a9eff;
+    --sidebar-w: 260px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+}
+
+/* ── NOISE OVERLAY ── */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.sidebar-brand {
+    padding: 28px 24px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.brand-icon::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 60%);
+}
+
+.brand-icon svg { width: 16px; height: 16px; color: #000; position: relative; z-index: 1; }
+
+.brand-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+}
+
+.brand-tag {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid rgba(0,212,170,0.15);
+    padding: 1px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.nav-section {
+    padding: 20px 12px 8px;
+}
+
+.nav-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 0 10px;
+    margin-bottom: 6px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 7px;
+    font-size: 13.5px;
+    font-weight: 450;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-bottom: 2px;
+    position: relative;
+}
+
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+.nav-item:hover {
+    background: var(--surface-2);
+    color: var(--text-primary);
+}
+
+.nav-item.active {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid rgba(0,212,170,0.12);
+}
+
+.nav-item.active svg { color: var(--accent); }
+
+.nav-badge {
+    margin-left: auto;
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-dim);
+    padding: 1px 6px;
+    border-radius: 10px;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 16px 12px;
+    border-top: 1px solid var(--border);
+}
+
+.user-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.user-card:hover { background: var(--surface-2); }
+
+.user-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    flex-shrink: 0;
+}
+
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+.user-role { font-size: 11px; color: var(--text-muted); }
+
+.user-actions { color: var(--text-muted); }
+.user-actions svg { width: 14px; height: 14px; }
+
+/* ── MAIN ── */
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+}
+
+/* ── TOPBAR ── */
+.topbar {
+    height: 64px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 36px;
+    gap: 16px;
+    flex-shrink: 0;
+    background: rgba(9,12,16,0.8);
+    backdrop-filter: blur(12px);
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.breadcrumb span.current {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.breadcrumb svg { width: 12px; height: 12px; }
+
+.topbar-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid rgba(0,212,170,0.15);
+    padding: 5px 12px;
+    border-radius: 20px;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--accent-glow); }
+    50% { opacity: 0.8; box-shadow: 0 0 0 4px transparent; }
+}
+
+.topbar-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text-secondary);
+    position: relative;
+}
+
+.topbar-btn:hover {
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+    background: var(--surface-2);
+}
+
+.topbar-btn svg { width: 15px; height: 15px; }
+
+.notif-badge {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 8px;
+    height: 8px;
+    background: var(--red);
+    border-radius: 50%;
+    border: 2px solid var(--bg);
+}
+
+/* ── CONTENT ── */
+.content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 36px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface-2) transparent;
+}
+
+.content-header {
+    margin-bottom: 32px;
+}
+
+.page-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+}
+
+.page-subtitle {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+}
+
+.page-subtitle span {
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+}
+
+/* ── TIME RANGE ── */
+.time-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 28px;
+}
+
+.time-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-right: 4px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.time-btn {
+    padding: 5px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.time-btn:hover {
+    background: var(--surface-2);
+    color: var(--text-primary);
+}
+
+.time-btn.active {
+    background: var(--surface);
+    color: var(--text-primary);
+    border-color: var(--border);
+}
+
+/* ── KPI GRID ── */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 22px 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+    cursor: default;
+}
+
+.kpi-card:hover { border-color: var(--border-hover); }
+
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent-color, transparent);
+    opacity: 0.6;
+}
+
+.kpi-card[data-color="green"]  { --accent-color: var(--accent); }
+.kpi-card[data-color="blue"]   { --accent-color: var(--blue); }
+.kpi-card[data-color="amber"]  { --accent-color: var(--amber); }
+.kpi-card[data-color="red"]    { --accent-color: var(--red); }
+
+.kpi-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.kpi-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.kpi-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    background: var(--accent-dim-v, rgba(255,255,255,0.04));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.kpi-icon svg { width: 13px; height: 13px; }
+
+.kpi-card[data-color="green"] .kpi-icon { background: rgba(0,212,170,0.1); color: var(--accent); }
+.kpi-card[data-color="blue"]  .kpi-icon { background: rgba(74,158,255,0.1); color: var(--blue); }
+.kpi-card[data-color="amber"] .kpi-icon { background: rgba(255,165,2,0.1); color: var(--amber); }
+.kpi-card[data-color="red"]   .kpi-icon { background: rgba(255,71,87,0.1); color: var(--red); }
+
+.kpi-value {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -1px;
+    color: var(--text-primary);
+    line-height: 1;
+    margin-bottom: 8px;
+    font-variant-numeric: tabular-nums;
+}
+
+.kpi-change {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+}
+
+.kpi-change.up { color: var(--accent); }
+.kpi-change.down { color: var(--red); }
+.kpi-change span { color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 11px; }
+.kpi-change svg { width: 12px; height: 12px; }
+
+/* ── BOTTOM GRID ── */
+.bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 16px;
+}
+
+/* ── PANEL ── */
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.panel-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.panel-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.panel-action {
+    font-size: 12px;
+    color: var(--accent);
+    cursor: pointer;
+    font-weight: 500;
+    transition: opacity 0.15s;
+}
+
+.panel-action:hover { opacity: 0.7; }
+
+.panel-body { padding: 24px; }
+
+/* ── CHART AREA ── */
+.chart-area {
+    height: 200px;
+    position: relative;
+    margin-bottom: 8px;
+}
+
+.chart-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.chart-x-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+    padding: 0 2px;
+    margin-top: 6px;
+}
+
+/* ── SESSION TABLE ── */
+.session-list { }
+
+.session-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.12s;
+    margin: 0 -24px;
+    padding: 13px 24px;
+}
+
+.session-row:last-child { border-bottom: none; }
+.session-row:hover { background: var(--surface-2); }
+
+.session-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 5px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.session-info { flex: 1; min-width: 0; }
+.session-date { font-size: 12.5px; font-weight: 500; color: var(--text-primary); }
+.session-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+.session-focus {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 5px;
+}
+
+.focus-high { color: var(--accent); background: rgba(0,212,170,0.08); }
+.focus-mid  { color: var(--amber); background: rgba(255,165,2,0.08); }
+.focus-low  { color: var(--red);   background: rgba(255,71,87,0.08); }
+
+/* ── RL ENGINE PANEL ── */
+.engine-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 12px 14px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(0,212,170,0.12);
+    border-radius: 8px;
+}
+
+.engine-status-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--accent);
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: pulse-dot 2s infinite;
+}
+
+.engine-status-text {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 500;
+}
+
+.metric-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.metric-row:last-child { border-bottom: none; }
+
+.metric-name {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+}
+
+.metric-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.progress-bar {
+    height: 3px;
+    background: var(--surface-2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--fill-color, var(--accent));
+    border-radius: 2px;
+    transition: width 0.8s ease;
+}
+
+.metric-block {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.metric-block:last-child { border-bottom: none; }
+
+.metric-block-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+/* ── ANIMS ── */
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.kpi-card { animation: fadeUp 0.4s ease both; }
+.kpi-card:nth-child(1) { animation-delay: 0.05s; }
+.kpi-card:nth-child(2) { animation-delay: 0.10s; }
+.kpi-card:nth-child(3) { animation-delay: 0.15s; }
+.kpi-card:nth-child(4) { animation-delay: 0.20s; }
+
+.panel { animation: fadeUp 0.4s ease both; animation-delay: 0.25s; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="8" cy="8" r="3"/>
+                <path d="M8 1v2M8 13v2M1 8h2M13 8h2"/>
+            </svg>
+        </div>
+        <div>
+            <div class="brand-name">Attention AI</div>
+        </div>
+        <div class="brand-tag" style="margin-left:auto;">Beta</div>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-label">Workspace</div>
+        <div class="nav-item active">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="1" y="1" width="6" height="6" rx="1.5"/>
+                <rect x="9" y="1" width="6" height="6" rx="1.5"/>
+                <rect x="1" y="9" width="6" height="6" rx="1.5"/>
+                <rect x="9" y="9" width="6" height="6" rx="1.5"/>
+            </svg>
+            Dashboard
+        </div>
+        <div class="nav-item" onclick="goTo('monitor.html')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="8" cy="8" r="6.5"/>
+                <circle cx="8" cy="8" r="2.5"/>
+                <line x1="8" y1="1" x2="8" y2="3.5"/>
+            </svg>
+            Live Monitor
+            <span class="nav-badge">LIVE</span>
+        </div>
+        <div class="nav-item" onclick="goTo('analytics.html')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="1,12 5,8 9,10 15,4"/>
+                <polyline points="12,4 15,4 15,7"/>
+            </svg>
+            Analytics
+        </div>
+        <div class="nav-item" onclick="goTo('journal.html')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="1" width="10" height="14" rx="1.5"/>
+                <line x1="6" y1="5" x2="10" y2="5"/>
+                <line x1="6" y1="8" x2="10" y2="8"/>
+                <line x1="6" y1="11" x2="8" y2="11"/>
+            </svg>
+            Journal
+        </div>
+        <div class="nav-item" onclick="goTo('focus_boosters.html')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="1" width="10" height="14" rx="1.5"/>
+                <line x1="6" y1="5" x2="10" y2="5"/>
+                <line x1="6" y1="8" x2="10" y2="8"/>
+                <line x1="6" y1="11" x2="8" y2="11"/>
+            </svg>
+            Focus Boosters
+        </div>
+    </div>
+
+    <div class="nav-section" style="margin-top:4px;">
+        <div class="nav-label">System</div>
+        <div class="nav-item">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="8" cy="8" r="2"/>
+                <path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06"/>
+            </svg>
+            Settings
+        </div>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="user-card">
+            <div class="user-avatar">AK</div>
+            <div class="user-info">
+                <div class="user-name">Alex Kim</div>
+                <div class="user-role">Pro Plan</div>
+            </div>
+            <div class="user-actions" onclick="logout()">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M10 8H2M5 5l-3 3 3 3M7 4V2.5A1.5 1.5 0 018.5 1h5A1.5 1.5 0 0115 2.5v11a1.5 1.5 0 01-1.5 1.5h-5A1.5 1.5 0 017 13.5V12"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div class="breadcrumb">
+            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="1" y="1" width="4" height="4" rx="0.8"/>
+                <rect x="7" y="1" width="4" height="4" rx="0.8"/>
+                <rect x="1" y="7" width="4" height="4" rx="0.8"/>
+                <rect x="7" y="7" width="4" height="4" rx="0.8"/>
+            </svg>
+            Workspace
+            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="4,2 8,6 4,10"/>
+            </svg>
+            <span class="current">Dashboard</span>
+        </div>
+
+        <div class="topbar-right">
+            <div class="status-pill">
+                <div class="status-dot"></div>
+                RL Engine Active
+            </div>
+
+            <div class="topbar-btn">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M8 1.5a5 5 0 015 5c0 2.5-1 4-1 5.5H4c0-1.5-1-3-1-5.5a5 5 0 015-5z"/>
+                    <line x1="6" y1="13" x2="10" y2="13"/>
+                    <line x1="7" y1="15" x2="9" y2="15"/>
+                </svg>
+                <span class="notif-badge"></span>
+            </div>
+
+            <div class="topbar-btn">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="7" cy="7" r="5"/>
+                    <line x1="10.5" y1="10.5" x2="14" y2="14"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+        <div class="content-header">
+            <div class="page-title">Overview</div>
+            <div class="page-subtitle">Last updated <span id="lastUpdated">—</span> · Session data from the past 30 days</div>
+        </div>
+
+        <!-- TIME BAR -->
+        <div class="time-bar">
+            <span class="time-label">Period</span>
+            <button class="time-btn" onclick="setTime(this)">7D</button>
+            <button class="time-btn active" onclick="setTime(this)">30D</button>
+            <button class="time-btn" onclick="setTime(this)">90D</button>
+            <button class="time-btn" onclick="setTime(this)">All</button>
+        </div>
+
+        <!-- KPI CARDS -->
+        <div class="kpi-grid">
+            <div class="kpi-card" data-color="green">
+                <div class="kpi-header">
+                    <div class="kpi-label">Total Sessions</div>
+                    <div class="kpi-icon">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="8" cy="8" r="6.5"/>
+                            <polyline points="8,4.5 8,8 10.5,10"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="kpi-value">12</div>
+                <div class="kpi-change up">
+                    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,9 6,3 10,9"/></svg>
+                    +3 <span>vs last period</span>
+                </div>
+            </div>
+
+            <div class="kpi-card" data-color="blue">
+                <div class="kpi-header">
+                    <div class="kpi-label">Avg Focus Score</div>
+                    <div class="kpi-icon">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <polyline points="1,12 5,7 9,9 15,3"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="kpi-value">0.73</div>
+                <div class="kpi-change up">
+                    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,9 6,3 10,9"/></svg>
+                    +0.06 <span>vs last period</span>
+                </div>
+            </div>
+
+            <div class="kpi-card" data-color="amber">
+                <div class="kpi-header">
+                    <div class="kpi-label">Interventions</div>
+                    <div class="kpi-icon">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M8 2L2 13h12L8 2z"/>
+                            <line x1="8" y1="7" x2="8" y2="10"/>
+                            <circle cx="8" cy="12" r="0.5" fill="currentColor"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="kpi-value">28</div>
+                <div class="kpi-change down">
+                    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,3 6,9 10,3"/></svg>
+                    −5 <span>vs last period</span>
+                </div>
+            </div>
+
+            <div class="kpi-card" data-color="red">
+                <div class="kpi-header">
+                    <div class="kpi-label">Peak Focus Time</div>
+                    <div class="kpi-icon">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="8" cy="8" r="6.5"/>
+                            <polyline points="8,4 8,8.5 11,8.5"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="kpi-value">10 AM</div>
+                <div class="kpi-change up">
+                    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="2,9 6,3 10,9"/></svg>
+                    Consistent <span>pattern</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM GRID -->
+        <div class="bottom-grid">
+
+            <!-- SESSION CHART + LIST -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Focus Score Trend</div>
+                    <div class="panel-action">Export →</div>
+                </div>
+                <div class="panel-body">
+                    <div class="chart-area">
+                        <svg class="chart-svg" id="chart" viewBox="0 0 600 180" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="gFill" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#00d4aa" stop-opacity="0.18"/>
+                                    <stop offset="100%" stop-color="#00d4aa" stop-opacity="0"/>
+                                </linearGradient>
+                                <linearGradient id="gLine" x1="0" y1="0" x2="1" y2="0">
+                                    <stop offset="0%" stop-color="#4a9eff"/>
+                                    <stop offset="100%" stop-color="#00d4aa"/>
+                                </linearGradient>
+                            </defs>
+                            <!-- Grid lines -->
+                            <line x1="0" y1="45" x2="600" y2="45" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+                            <line x1="0" y1="90" x2="600" y2="90" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+                            <line x1="0" y1="135" x2="600" y2="135" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+                            <!-- Y Labels -->
+                            <text x="0" y="43" fill="#484f58" font-size="10" font-family="DM Mono">1.0</text>
+                            <text x="0" y="88" fill="#484f58" font-size="10" font-family="DM Mono">0.5</text>
+                            <text x="0" y="133" fill="#484f58" font-size="10" font-family="DM Mono">0.0</text>
+                            <!-- Area -->
+                            <path id="chartArea"
+                                d="M30,120 C80,105 130,95 180,80 C230,65 280,100 330,88 C380,76 430,60 480,52 C510,47 540,55 570,48 L570,180 L30,180 Z"
+                                fill="url(#gFill)"/>
+                            <!-- Line -->
+                            <path id="chartLine"
+                                d="M30,120 C80,105 130,95 180,80 C230,65 280,100 330,88 C380,76 430,60 480,52 C510,47 540,55 570,48"
+                                fill="none" stroke="url(#gLine)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <!-- Dots -->
+                            <circle cx="180" cy="80" r="3.5" fill="#4a9eff" stroke="#090c10" stroke-width="2"/>
+                            <circle cx="330" cy="88" r="3.5" fill="#4a9eff" stroke="#090c10" stroke-width="2"/>
+                            <circle cx="480" cy="52" r="3.5" fill="#00d4aa" stroke="#090c10" stroke-width="2"/>
+                            <circle cx="570" cy="48" r="4.5" fill="#00d4aa" stroke="#090c10" stroke-width="2"/>
+                            <!-- Tooltip line -->
+                            <line x1="570" y1="48" x2="570" y2="180" stroke="rgba(0,212,170,0.2)" stroke-width="1" stroke-dasharray="3,3"/>
+                        </svg>
+                    </div>
+                    <div class="chart-x-labels">
+                        <span>Jan 22</span>
+                        <span>Jan 29</span>
+                        <span>Feb 5</span>
+                        <span>Feb 12</span>
+                        <span>Feb 19</span>
+                        <span>Feb 21</span>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid var(--border); padding: 4px 0;">
+                    <div class="session-row">
+                        <div class="session-num">12</div>
+                        <div class="session-info">
+                            <div class="session-date">Feb 21, 2026</div>
+                            <div class="session-meta">48 min · 3 interventions</div>
+                        </div>
+                        <div class="session-focus focus-high">0.91</div>
+                    </div>
+                    <div class="session-row">
+                        <div class="session-num">11</div>
+                        <div class="session-info">
+                            <div class="session-date">Feb 19, 2026</div>
+                            <div class="session-meta">34 min · 5 interventions</div>
+                        </div>
+                        <div class="session-focus focus-high">0.82</div>
+                    </div>
+                    <div class="session-row">
+                        <div class="session-num">10</div>
+                        <div class="session-info">
+                            <div class="session-date">Feb 17, 2026</div>
+                            <div class="session-meta">61 min · 2 interventions</div>
+                        </div>
+                        <div class="session-focus focus-mid">0.67</div>
+                    </div>
+                    <div class="session-row">
+                        <div class="session-num">09</div>
+                        <div class="session-info">
+                            <div class="session-date">Feb 14, 2026</div>
+                            <div class="session-meta">27 min · 8 interventions</div>
+                        </div>
+                        <div class="session-focus focus-low">0.41</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RL ENGINE PANEL -->
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">RL Personalization Engine</div>
+                    <div class="panel-action">Details →</div>
+                </div>
+                <div class="panel-body">
+
+                    <div class="engine-status">
+                        <div class="engine-status-dot"></div>
+                        <div class="engine-status-text">Actively adapting model</div>
+                    </div>
+
+                    <div class="metric-block">
+                        <div class="metric-block-header">
+                            <span class="metric-name">Intervention Accuracy</span>
+                            <span class="metric-val">84.2%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width:84%; --fill-color: var(--accent);"></div>
+                        </div>
+                    </div>
+
+                    <div class="metric-block">
+                        <div class="metric-block-header">
+                            <span class="metric-name">Policy Confidence</span>
+                            <span class="metric-val">71.5%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width:71.5%; --fill-color: var(--blue);"></div>
+                        </div>
+                    </div>
+
+                    <div class="metric-block">
+                        <div class="metric-block-header">
+                            <span class="metric-name">Reward Signal Strength</span>
+                            <span class="metric-val">0.68</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width:68%; --fill-color: var(--amber);"></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px;">
+                        <div class="metric-row">
+                            <span class="metric-name">Model Version</span>
+                            <span class="metric-val">v2.4.1</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">Episodes Trained</span>
+                            <span class="metric-val">1,204</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">Next Adaptation</span>
+                            <span class="metric-val" style="color: var(--accent);">In 3 sessions</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-name">Data Points</span>
+                            <span class="metric-val">38,762</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+function logout() {
+    localStorage.removeItem("access_token");
+    window.location.href = "/";
+}
+
+function goTo(page) {
+    window.location.href = "/static/" + page;
+}
+
+function setTime(el) {
+    document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+}
+
+// Set last updated time
+const now = new Date();
+const formatted = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+document.getElementById('lastUpdated').textContent = formatted;
+</script>
+
+</body>
+</html>

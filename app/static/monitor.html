@@ -1,0 +1,1171 @@
+<script>
+if (!localStorage.getItem("access_token")) {
+    window.location.href = "/";
+}
+</script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Attention AI | Live Monitor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+    --bg: #090c10;
+    --surface: #0d1117;
+    --surface-2: #161b22;
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --accent: #00d4aa;
+    --accent-dim: rgba(0, 212, 170, 0.08);
+    --accent-glow: rgba(0, 212, 170, 0.2);
+    --text-primary: #e6edf3;
+    --text-secondary: #7d8590;
+    --text-muted: #484f58;
+    --red: #ff4757;
+    --amber: #ffa502;
+    --blue: #4a9eff;
+    --sidebar-w: 260px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+    width: var(--sidebar-w);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.sidebar-brand {
+    padding: 28px 24px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+}
+.brand-icon::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 60%);
+}
+.brand-icon svg { width: 16px; height: 16px; color: #000; position: relative; z-index: 1; }
+.brand-name { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; }
+.brand-tag {
+    font-size: 10px; font-weight: 500; color: var(--accent);
+    background: var(--accent-dim); border: 1px solid rgba(0,212,170,0.15);
+    padding: 1px 6px; border-radius: 4px; letter-spacing: 0.5px;
+    text-transform: uppercase; margin-left: auto;
+}
+
+.nav-section { padding: 20px 12px 8px; }
+.nav-label {
+    font-size: 10px; font-weight: 500; color: var(--text-muted);
+    letter-spacing: 1px; text-transform: uppercase;
+    padding: 0 10px; margin-bottom: 6px;
+}
+.nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 7px;
+    font-size: 13.5px; font-weight: 450;
+    color: var(--text-secondary); cursor: pointer;
+    transition: all 0.15s ease; margin-bottom: 2px;
+}
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+.nav-item:hover { background: var(--surface-2); color: var(--text-primary); }
+.nav-item.active {
+    background: var(--accent-dim); color: var(--accent);
+    border: 1px solid rgba(0,212,170,0.12);
+}
+.nav-badge {
+    margin-left: auto; font-size: 10px;
+    font-family: 'DM Mono', monospace; font-weight: 500;
+    color: var(--accent); background: var(--accent-dim);
+    padding: 1px 6px; border-radius: 10px;
+}
+
+.sidebar-footer {
+    margin-top: auto; padding: 16px 12px;
+    border-top: 1px solid var(--border);
+}
+.user-card {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 8px; cursor: pointer;
+    transition: background 0.15s;
+}
+.user-card:hover { background: var(--surface-2); }
+.user-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: white; flex-shrink: 0;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: 13px; font-weight: 500; }
+.user-role { font-size: 11px; color: var(--text-muted); }
+.user-actions { color: var(--text-muted); }
+.user-actions svg { width: 14px; height: 14px; }
+
+/* ── MAIN ── */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.topbar {
+    height: 64px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 36px; gap: 16px;
+    flex-shrink: 0; background: rgba(9,12,16,0.8); backdrop-filter: blur(12px);
+}
+.breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
+.breadcrumb span.current { color: var(--text-primary); font-weight: 500; }
+.breadcrumb svg { width: 12px; height: 12px; }
+
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+
+.status-pill {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-family: 'DM Mono', monospace; color: var(--accent);
+    background: var(--accent-dim); border: 1px solid rgba(0,212,170,0.15);
+    padding: 5px 12px; border-radius: 20px;
+}
+.status-pill.inactive { color: var(--text-muted); background: rgba(255,255,255,0.03); border-color: var(--border); }
+
+.status-dot {
+    width: 6px; height: 6px; background: var(--accent);
+    border-radius: 50%; animation: pulse-dot 2s infinite;
+}
+.status-dot.inactive { background: var(--text-muted); animation: none; }
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--accent-glow); }
+    50% { opacity: 0.8; box-shadow: 0 0 0 4px transparent; }
+}
+
+.topbar-btn {
+    width: 34px; height: 34px; border-radius: 7px;
+    border: 1px solid var(--border); background: var(--surface);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.15s; color: var(--text-secondary);
+}
+.topbar-btn:hover { border-color: var(--border-hover); color: var(--text-primary); background: var(--surface-2); }
+.topbar-btn svg { width: 15px; height: 15px; }
+
+/* ── CONTENT ── */
+.content { flex: 1; overflow-y: auto; padding: 36px; scrollbar-width: thin; scrollbar-color: var(--surface-2) transparent; }
+
+.content-header { margin-bottom: 28px; display: flex; align-items: flex-start; justify-content: space-between; }
+.page-title { font-size: 22px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 4px; }
+.page-subtitle { font-size: 13.5px; color: var(--text-secondary); }
+
+/* ── MAIN LAYOUT ── */
+.monitor-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 16px;
+    align-items: start;
+}
+
+/* ── PANEL ── */
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    animation: fadeUp 0.4s ease both;
+}
+.panel:nth-child(2) { animation-delay: 0.1s; }
+
+.panel-header {
+    padding: 18px 24px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+}
+.panel-title { font-size: 13.5px; font-weight: 600; }
+.panel-meta { font-size: 11px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+.panel-body { padding: 24px; }
+
+/* ── WEBCAM ── */
+.video-container {
+    position: relative;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform: scaleX(-1); /* mirror */
+}
+
+.video-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    background: rgba(9,12,16,0.85);
+    transition: opacity 0.3s;
+}
+
+.video-overlay.hidden { opacity: 0; pointer-events: none; }
+
+.cam-icon {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted);
+}
+.cam-icon svg { width: 22px; height: 22px; }
+.cam-label { font-size: 13px; color: var(--text-secondary); }
+
+/* Corner brackets on video */
+.video-frame {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+}
+.video-frame.active { opacity: 1; }
+.video-frame::before,
+.video-frame::after,
+.video-frame .br,
+.video-frame .bl {
+    content: '';
+    position: absolute;
+    width: 24px; height: 24px;
+    border-color: var(--accent);
+    border-style: solid;
+    border-width: 0;
+}
+.video-frame::before { top: 12px; left: 12px; border-top-width: 2px; border-left-width: 2px; border-radius: 3px 0 0 0; }
+.video-frame::after  { top: 12px; right: 12px; border-top-width: 2px; border-right-width: 2px; border-radius: 0 3px 0 0; }
+.video-frame .bl { bottom: 12px; left: 12px; border-bottom-width: 2px; border-left-width: 2px; border-radius: 0 0 0 3px; }
+.video-frame .br { bottom: 12px; right: 12px; border-bottom-width: 2px; border-right-width: 2px; border-radius: 0 0 3px 0; }
+
+/* Face detection box */
+.face-box {
+    position: absolute;
+    border: 1.5px solid var(--accent);
+    border-radius: 4px;
+    box-shadow: 0 0 12px var(--accent-glow);
+    opacity: 0;
+    transition: all 0.3s;
+    top: 25%; left: 30%; width: 40%; height: 50%;
+}
+.face-box.active { opacity: 1; }
+.face-label {
+    position: absolute;
+    top: -20px; left: 0;
+    font-size: 9px; font-family: 'DM Mono', monospace;
+    color: var(--accent); letter-spacing: 0.5px;
+    background: rgba(9,12,16,0.8);
+    padding: 2px 6px; border-radius: 3px;
+}
+
+/* Recording badge */
+.rec-badge {
+    position: absolute;
+    top: 12px; right: 12px;
+    display: flex; align-items: center; gap: 5px;
+    font-size: 10px; font-family: 'DM Mono', monospace;
+    color: var(--red); background: rgba(9,12,16,0.8);
+    padding: 4px 8px; border-radius: 4px;
+    border: 1px solid rgba(255,71,87,0.2);
+    opacity: 0; transition: opacity 0.3s;
+}
+.rec-badge.active { opacity: 1; }
+.rec-dot { width: 6px; height: 6px; background: var(--red); border-radius: 50%; animation: pulse-dot 1.2s infinite; }
+
+/* Session timer */
+.timer-badge {
+    position: absolute;
+    bottom: 12px; left: 12px;
+    font-size: 11px; font-family: 'DM Mono', monospace;
+    color: var(--text-primary); background: rgba(9,12,16,0.8);
+    padding: 4px 10px; border-radius: 4px;
+    border: 1px solid var(--border);
+    opacity: 0; transition: opacity 0.3s;
+}
+.timer-badge.active { opacity: 1; }
+
+/* ── CONTROLS ── */
+.controls { display: flex; gap: 10px; margin-top: 16px; }
+
+.btn {
+    flex: 1; padding: 11px 20px;
+    border-radius: 8px; font-size: 13.5px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: all 0.18s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    border: none;
+}
+.btn svg { width: 14px; height: 14px; }
+
+.btn-primary {
+    background: var(--accent); color: #000;
+}
+.btn-primary:hover { background: #00bfa0; transform: translateY(-1px); box-shadow: 0 4px 20px var(--accent-glow); }
+.btn-primary:disabled { background: var(--surface-2); color: var(--text-muted); transform: none; box-shadow: none; cursor: not-allowed; border: 1px solid var(--border); }
+
+.btn-danger {
+    background: rgba(255,71,87,0.1); color: var(--red);
+    border: 1px solid rgba(255,71,87,0.2);
+}
+.btn-danger:hover { background: rgba(255,71,87,0.18); transform: translateY(-1px); }
+.btn-danger:disabled { opacity: 0.3; transform: none; cursor: not-allowed; }
+
+/* ── STATS PANEL ── */
+.focus-display {
+    text-align: center;
+    padding: 28px 24px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+}
+
+.focus-ring-container {
+    position: relative;
+    width: 140px; height: 140px;
+    margin: 0 auto 16px;
+}
+
+.focus-ring-svg {
+    width: 140px; height: 140px;
+    transform: rotate(-90deg);
+}
+
+.ring-bg {
+    fill: none;
+    stroke: var(--surface-2);
+    stroke-width: 8;
+}
+
+.ring-fill {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 352;
+    stroke-dashoffset: 352;
+    transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s;
+    filter: drop-shadow(0 0 6px var(--accent-glow));
+}
+
+.focus-center {
+    position: absolute;
+    inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+}
+
+.focus-value {
+    font-size: 32px; font-weight: 600;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: -1px; color: var(--text-primary);
+    line-height: 1;
+}
+
+.focus-label-small {
+    font-size: 11px; color: var(--text-muted);
+    margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+.focus-state {
+    font-size: 14px; font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.focus-state.focused { color: var(--accent); }
+.focus-state.moderate { color: var(--amber); }
+.focus-state.distracted { color: var(--red); }
+.focus-state.idle { color: var(--text-muted); }
+
+.focus-emotion {
+    font-size: 12px; color: var(--text-muted);
+    font-family: 'DM Mono', monospace;
+}
+
+/* ── MINI STATS ── */
+.mini-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+}
+
+.mini-stat {
+    padding: 16px 20px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+.mini-stat:nth-child(2) { border-right: none; }
+.mini-stat:nth-child(3) { border-bottom: none; }
+.mini-stat:nth-child(4) { border-right: none; border-bottom: none; }
+
+.mini-stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.mini-stat-val { font-size: 20px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--text-primary); letter-spacing: -0.5px; }
+.mini-stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* ── ACTIVITY LOG ── */
+.log-panel { margin-top: 16px; }
+
+.log-list { max-height: 180px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--surface-2) transparent; }
+
+.log-row {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    animation: fadeIn 0.3s ease;
+}
+.log-row:last-child { border-bottom: none; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: none; } }
+
+.log-time { font-family: 'DM Mono', monospace; color: var(--text-muted); flex-shrink: 0; padding-top: 1px; }
+.log-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.log-text { color: var(--text-secondary); line-height: 1.5; }
+
+/* ── DISTRACTION ALERT ── */
+.alert-banner {
+    display: none;
+    align-items: center; gap: 10px;
+    padding: 10px 16px;
+    background: rgba(255,71,87,0.08);
+    border: 1px solid rgba(255,71,87,0.2);
+    border-radius: 8px;
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: var(--red);
+    animation: pulse-border 2s infinite;
+}
+.alert-banner.show { display: flex; }
+.alert-banner svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+@keyframes pulse-border {
+    0%, 100% { border-color: rgba(255,71,87,0.2); }
+    50% { border-color: rgba(255,71,87,0.5); }
+}
+
+/* ── ANIMS ── */
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── INTERVENTION MODAL ── */
+.modal-backdrop {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px);
+    justify-content: center; align-items: center;
+    z-index: 1000;
+}
+.modal-backdrop.show { display: flex; }
+
+.modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 36px;
+    text-align: center;
+    width: 380px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+    animation: fadeUp 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.modal::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--amber), var(--red));
+}
+
+.modal-icon {
+    width: 52px; height: 52px;
+    background: rgba(255,165,2,0.1);
+    border: 1px solid rgba(255,165,2,0.2);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    color: var(--amber);
+}
+.modal-icon svg { width: 22px; height: 22px; }
+
+.modal-title {
+    font-size: 17px; font-weight: 600;
+    color: var(--text-primary); margin-bottom: 8px;
+}
+.modal-desc { font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 24px; }
+
+.modal-score {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'DM Mono', monospace; font-size: 12px;
+    color: var(--red); background: rgba(255,71,87,0.08);
+    border: 1px solid rgba(255,71,87,0.15);
+    padding: 4px 12px; border-radius: 20px;
+    margin-bottom: 24px;
+}
+
+.modal-actions { display: flex; gap: 10px; }
+
+.modal-btn {
+    flex: 1; padding: 11px;
+    border-radius: 8px; font-size: 13px;
+    font-weight: 500; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: all 0.15s; border: none;
+}
+.modal-btn-primary { background: var(--accent); color: #000; }
+.modal-btn-primary:hover { background: #00bfa0; }
+.modal-btn-secondary {
+    background: var(--surface-2); color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+.modal-btn-secondary:hover { color: var(--text-primary); border-color: var(--border-hover); }
+
+canvas { display: none; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="8" cy="8" r="3"/>
+                <path d="M8 1v2M8 13v2M1 8h2M13 8h2"/>
+            </svg>
+        </div>
+        <div class="brand-name">Attention AI</div>
+        <div class="brand-tag">Beta</div>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-label">Workspace</div>
+        <div class="nav-item" onclick="goTo('dashboard.html')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="1" y="1" width="6" height="6" rx="1.5"/>
+                <rect x="9" y="1" width="6" height="6" rx="1.5"/>
+                <rect x="1" y="9" width="6" height="6" rx="1.5"/>
+                <rect x="9" y="9" width="6" height="6" rx="1.5"/>
+            </svg>
+            Dashboard
+        </div>
+        <div class="nav-item active">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="8" cy="8" r="6.5"/>
+                <circle cx="8" cy="8" r="2.5"/>
+                <line x1="8" y1="1" x2="8" y2="3.5"/>
+            </svg>
+            Live Monitor
+            <span class="nav-badge" id="navBadge" style="display:none;">LIVE</span>
+        </div>
+        <div class="nav-item" onclick="goTo('analytics.html')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="1,12 5,8 9,10 15,4"/>
+                <polyline points="12,4 15,4 15,7"/>
+            </svg>
+            Analytics
+        </div>
+        <div class="nav-item" onclick="goTo('journal.html')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="1" width="10" height="14" rx="1.5"/>
+                <line x1="6" y1="5" x2="10" y2="5"/>
+                <line x1="6" y1="8" x2="10" y2="8"/>
+                <line x1="6" y1="11" x2="8" y2="11"/>
+            </svg>
+            Journal
+        </div>
+        <div class="nav-item" onclick="goTo('focus_boosters.html')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="1" width="10" height="14" rx="1.5"/>
+                <line x1="6" y1="5" x2="10" y2="5"/>
+                <line x1="6" y1="8" x2="10" y2="8"/>
+                <line x1="6" y1="11" x2="8" y2="11"/>
+            </svg>
+            Focus Boosters
+        </div>
+    </div>
+
+    <div class="nav-section" style="margin-top:4px;">
+        <div class="nav-label">System</div>
+        <div class="nav-item">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="8" cy="8" r="2"/>
+                <path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M3.05 3.05l1.06 1.06M11.89 11.89l1.06 1.06M3.05 12.95l1.06-1.06M11.89 4.11l1.06-1.06"/>
+            </svg>
+            Settings
+        </div>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="user-card">
+            <div class="user-avatar">AK</div>
+            <div class="user-info">
+                <div class="user-name">Alex Kim</div>
+                <div class="user-role">Pro Plan</div>
+            </div>
+            <div class="user-actions" onclick="logout()">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M10 8H2M5 5l-3 3 3 3M7 4V2.5A1.5 1.5 0 018.5 1h5A1.5 1.5 0 0115 2.5v11a1.5 1.5 0 01-1.5 1.5h-5A1.5 1.5 0 017 13.5V12"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    <div class="topbar">
+        <div class="breadcrumb">
+            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="6" cy="6" r="4.5"/><circle cx="6" cy="6" r="1.5"/>
+            </svg>
+            Workspace
+            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="4,2 8,6 4,10"/>
+            </svg>
+            <span class="current">Live Monitor</span>
+        </div>
+
+        <div class="topbar-right">
+            <div class="status-pill inactive" id="sessionPill">
+                <div class="status-dot inactive" id="sessionDot"></div>
+                <span id="sessionPillText">Session Inactive</span>
+            </div>
+            <div class="topbar-btn">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M8 1.5a5 5 0 015 5c0 2.5-1 4-1 5.5H4c0-1.5-1-3-1-5.5a5 5 0 015-5z"/>
+                    <line x1="6" y1="13" x2="10" y2="13"/><line x1="7" y1="15" x2="9" y2="15"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="content-header">
+            <div>
+                <div class="page-title">Live Monitor</div>
+                <div class="page-subtitle">Real-time attention tracking via webcam analysis</div>
+            </div>
+        </div>
+
+        <div class="monitor-grid">
+
+            <!-- LEFT: CAMERA + LOG -->
+            <div style="display:flex; flex-direction:column; gap:16px;">
+
+                <!-- Camera Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">Camera Feed</div>
+                        <div class="panel-meta" id="fpsLabel">— fps · Session #2</div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="video-container">
+                            <video id="video" autoplay muted playsinline></video>
+                            <canvas id="canvas"></canvas>
+
+                            <div class="video-overlay" id="videoOverlay">
+                                <div class="cam-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14"/>
+                                        <rect x="2" y="7" width="14" height="11" rx="2"/>
+                                    </svg>
+                                </div>
+                                <span class="cam-label">Camera inactive — start a session</span>
+                            </div>
+
+                            <div class="video-frame" id="videoFrame">
+                                <div class="bl"></div>
+                                <div class="br"></div>
+                            </div>
+
+                            <div class="face-box" id="faceBox">
+                                <span class="face-label">FACE DETECTED</span>
+                            </div>
+
+                            <div class="rec-badge" id="recBadge">
+                                <div class="rec-dot"></div>
+                                REC
+                            </div>
+
+                            <div class="timer-badge" id="timerBadge">00:00</div>
+                        </div>
+
+                        <div class="alert-banner" id="alertBanner">
+                            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M8 2L2 13h12L8 2z"/>
+                                <line x1="8" y1="7" x2="8" y2="10"/>
+                                <circle cx="8" cy="12" r="0.5" fill="currentColor"/>
+                            </svg>
+                            Distraction detected — focus score is below threshold
+                        </div>
+
+                        <div class="controls">
+                            <button class="btn btn-primary" id="startBtn" onclick="startMonitoring()">
+                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <polygon points="4,2 14,8 4,14" fill="currentColor" stroke="none"/>
+                                </svg>
+                                Start Session
+                            </button>
+                            <button class="btn btn-danger" id="stopBtn" onclick="stopMonitoring()" disabled>
+                                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <rect x="3" y="3" width="10" height="10" rx="1.5" fill="currentColor" stroke="none"/>
+                                </svg>
+                                Stop
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Log -->
+                <div class="panel log-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">Activity Log</div>
+                        <div class="panel-meta" id="logCount">0 events</div>
+                    </div>
+                    <div class="log-list" id="logList">
+                        <div class="log-row" style="padding: 18px 24px; color: var(--text-muted); font-size:12px;">
+                            No activity yet — start a session to begin logging.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: STATS -->
+            <div style="display:flex; flex-direction:column; gap:16px;">
+
+                <!-- Focus Score Panel -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">Focus Score</div>
+                        <div class="panel-meta">Live</div>
+                    </div>
+
+                    <div class="focus-display">
+                        <div class="focus-ring-container">
+                            <svg class="focus-ring-svg" viewBox="0 0 120 120">
+                                <circle class="ring-bg" cx="60" cy="60" r="50"/>
+                                <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="50"
+                                    style="stroke-dasharray:314; stroke-dashoffset:314;"/>
+                            </svg>
+                            <div class="focus-center">
+                                <div class="focus-value" id="focusScore">—</div>
+                                <div class="focus-label-small">score</div>
+                            </div>
+                        </div>
+
+                        <div class="focus-state idle" id="focusState">Waiting...</div>
+                        <div class="focus-emotion" id="emotionLabel">Emotion: —</div>
+                    </div>
+
+                    <div class="mini-stats">
+                        <div class="mini-stat">
+                            <div class="mini-stat-label">Session High</div>
+                            <div class="mini-stat-val" id="statHigh">—</div>
+                            <div class="mini-stat-sub">peak score</div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="mini-stat-label">Session Low</div>
+                            <div class="mini-stat-val" id="statLow">—</div>
+                            <div class="mini-stat-sub">trough</div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="mini-stat-label">Interventions</div>
+                            <div class="mini-stat-val" id="statInterventions">0</div>
+                            <div class="mini-stat-sub">this session</div>
+                        </div>
+                        <div class="mini-stat">
+                            <div class="mini-stat-label">Tab Switches</div>
+                            <div class="mini-stat-val" id="statTabs">0</div>
+                            <div class="mini-stat-sub">detected</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab tracking notice -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">Digital Behavior</div>
+                        <div class="panel-meta">Passive tracking</div>
+                    </div>
+                    <div class="panel-body" style="padding: 20px 24px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                            <span style="font-size:12.5px; color:var(--text-secondary);">Digital Focus Score</span>
+                            <span style="font-family:'DM Mono',monospace; font-size:13px; color:var(--text-primary);" id="digitalScoreDisplay">1.00</span>
+                        </div>
+                        <div style="height:3px; background:var(--surface-2); border-radius:2px; overflow:hidden; margin-bottom:20px;">
+                            <div id="digitalBar" style="height:100%; width:100%; background:var(--accent); border-radius:2px; transition:width 0.6s, background 0.4s;"></div>
+                        </div>
+
+                        <div style="display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-muted);">
+                            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="8" cy="8" r="6.5"/>
+                                <line x1="8" y1="5" x2="8" y2="8.5"/>
+                                <circle cx="8" cy="11" r="0.5" fill="currentColor"/>
+                            </svg>
+                            Penalty applied if &gt;2 tab switches per minute
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- INTERVENTION MODAL -->
+<div class="modal-backdrop" id="interventionModal">
+    <div class="modal">
+        <div class="modal-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 2L3 19h18L12 2z"/>
+                <line x1="12" y1="9" x2="12" y2="14"/>
+                <circle cx="12" cy="17" r="0.5" fill="currentColor"/>
+            </svg>
+        </div>
+        <div class="modal-title">Focus Dropping</div>
+        <div class="modal-desc">Your attention level has decreased below the threshold. A short refresh activity may help restore focus.</div>
+        <div class="modal-score">
+            <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polyline points="2,3 6,9 10,3"/>
+            </svg>
+            Score: <span id="modalScore">—</span>
+        </div>
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-primary" onclick="goToIntervention()">Take a Break</button>
+            <button class="modal-btn modal-btn-secondary" onclick="closeModal()">Dismiss</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── State ──
+let sessionId = 2;
+let token = localStorage.getItem("access_token");
+let digitalScore = 1.0;
+let captureInterval = null;
+let timerInterval = null;
+let modalVisible = false;
+let sessionSeconds = 0;
+let sessionHigh = null;
+let sessionLow = null;
+let interventionCount = 0;
+let tabSwitchCount = 0;
+let totalTabSwitches = 0;
+let logEvents = 0;
+
+// ── Tab tracking ──
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+        tabSwitchCount++;
+        totalTabSwitches++;
+        document.getElementById("statTabs").textContent = totalTabSwitches;
+    }
+});
+
+setInterval(() => {
+    if (tabSwitchCount > 2) {
+        digitalScore = 0.4;
+        addLog("warn", "Tab switching penalty applied (digital score → 0.4)");
+    } else {
+        digitalScore = 1.0;
+    }
+    updateDigitalBar();
+    tabSwitchCount = 0;
+}, 60000);
+
+// ── Camera ──
+async function setupCamera() {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 320, height: 240 } });
+    video.srcObject = stream;
+    return new Promise(resolve => { video.onloadedmetadata = resolve; });
+}
+
+// ── Capture & Send ──
+async function captureAndSendFrame() {
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = 320; canvas.height = 240;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageBase64 = canvas.toDataURL("image/jpeg", 0.6).split(",")[1];
+
+    if (!token) { alert("Login required"); window.location.href = "/login"; return; }
+
+    try {
+        const response = await fetch("http://127.0.0.1:8000/focus/frame", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ session_id: sessionId, image_base64: imageBase64, digital_score: digitalScore })
+        });
+
+        const text = await response.text();
+        if (response.ok) {
+            const data = JSON.parse(text);
+            updateUI(data.focus_score, data.emotion);
+            if (data.intervention_triggered) {
+                interventionCount++;
+                document.getElementById("statInterventions").textContent = interventionCount;
+                localStorage.setItem("intervention_type", data.intervention_type);
+                showWebsiteNotification(data.focus_score);
+                showPushNotification();
+                addLog("alert", "Intervention triggered — focus score: " + data.focus_score.toFixed(2));
+            }
+            // Show face box pseudo-randomly (in real app this comes from backend)
+            document.getElementById("faceBox").classList.add("active");
+        }
+    } catch (err) {
+        addLog("error", "Connection lost to backend");
+        console.error("Connection lost to Backend", err);
+    }
+}
+
+// ── UI Update ──
+function updateUI(score, emotion) {
+    const scoreEl = document.getElementById("focusScore");
+    const ringFill = document.getElementById("ringFill");
+    const stateEl = document.getElementById("focusState");
+    const emotionEl = document.getElementById("emotionLabel");
+    const alertBanner = document.getElementById("alertBanner");
+
+    scoreEl.textContent = score.toFixed(2);
+    localStorage.setItem("last_focus_score", score);
+    document.getElementById("modalScore").textContent = score.toFixed(2);
+
+    // Ring: circumference = 2π×50 = 314
+    const circumference = 314;
+    const offset = circumference - (score * circumference);
+    ringFill.style.strokeDashoffset = offset;
+
+    // Color by score
+    let color, stateText, stateClass;
+    if (score >= 0.7) {
+        color = "var(--accent)"; stateText = "Focused"; stateClass = "focused";
+        alertBanner.classList.remove("show");
+    } else if (score >= 0.45) {
+        color = "var(--amber)"; stateText = "Moderate"; stateClass = "moderate";
+        alertBanner.classList.remove("show");
+    } else {
+        color = "var(--red)"; stateText = "Distracted"; stateClass = "distracted";
+        alertBanner.classList.add("show");
+    }
+
+    ringFill.style.stroke = color;
+    stateEl.className = "focus-state " + stateClass;
+    stateEl.textContent = stateText;
+    if (emotion) emotionEl.textContent = "Emotion: " + emotion;
+
+    // Session stats
+    if (sessionHigh === null || score > sessionHigh) {
+        sessionHigh = score;
+        document.getElementById("statHigh").textContent = score.toFixed(2);
+    }
+    if (sessionLow === null || score < sessionLow) {
+        sessionLow = score;
+        document.getElementById("statLow").textContent = score.toFixed(2);
+    }
+}
+
+function updateDigitalBar() {
+    const bar = document.getElementById("digitalBar");
+    const display = document.getElementById("digitalScoreDisplay");
+    bar.style.width = (digitalScore * 100) + "%";
+    bar.style.background = digitalScore < 0.5 ? "var(--red)" : "var(--accent)";
+    display.textContent = digitalScore.toFixed(2);
+}
+
+// ── Session Timer ──
+function startTimer() {
+    sessionSeconds = 0;
+    timerInterval = setInterval(() => {
+        sessionSeconds++;
+        const m = String(Math.floor(sessionSeconds / 60)).padStart(2, "0");
+        const s = String(sessionSeconds % 60).padStart(2, "0");
+        document.getElementById("timerBadge").textContent = m + ":" + s;
+    }, 1000);
+}
+
+// ── Monitoring ──
+async function startMonitoring() {
+    Notification.requestPermission();
+    document.getElementById("startBtn").disabled = true;
+    document.getElementById("startBtn").innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><circle cx="8" cy="8" r="6.5" stroke-dasharray="3,2"/></svg> Initializing...`;
+    document.getElementById("stopBtn").disabled = false;
+
+    try {
+        await setupCamera();
+    } catch (e) {
+        addLog("error", "Camera access denied");
+        document.getElementById("startBtn").disabled = false;
+        document.getElementById("startBtn").innerHTML = `▶ Start Session`;
+        return;
+    }
+
+    // Update UI
+    document.getElementById("videoOverlay").classList.add("hidden");
+    document.getElementById("videoFrame").classList.add("active");
+    document.getElementById("recBadge").classList.add("active");
+    document.getElementById("timerBadge").classList.add("active");
+    document.getElementById("navBadge").style.display = "";
+
+    const pill = document.getElementById("sessionPill");
+    const dot = document.getElementById("sessionDot");
+    pill.classList.remove("inactive");
+    dot.classList.remove("inactive");
+    document.getElementById("sessionPillText").textContent = "Session Active";
+
+    document.getElementById("startBtn").innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><polygon points="4,2 14,8 4,14" fill="currentColor" stroke="none"/></svg> Monitoring...`;
+
+    // Reset stats
+    sessionHigh = null; sessionLow = null;
+    interventionCount = 0;
+    document.getElementById("statInterventions").textContent = "0";
+    document.getElementById("statHigh").textContent = "—";
+    document.getElementById("statLow").textContent = "—";
+    document.getElementById("focusScore").textContent = "—";
+    document.getElementById("focusState").textContent = "Analyzing...";
+    document.getElementById("focusState").className = "focus-state idle";
+
+    addLog("info", "Session started");
+    localStorage.setItem("current_session_id", sessionId);
+    startTimer();
+    captureInterval = setInterval(captureAndSendFrame, 1500);
+}
+
+function stopMonitoring() {
+    if (captureInterval) { clearInterval(captureInterval); captureInterval = null; }
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+
+    const stream = video.srcObject;
+    if (stream) { stream.getTracks().forEach(t => t.stop()); video.srcObject = null; }
+
+    document.getElementById("startBtn").disabled = false;
+    document.getElementById("startBtn").innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><polygon points="4,2 14,8 4,14" fill="currentColor" stroke="none"/></svg> Start Session`;
+    document.getElementById("stopBtn").disabled = true;
+    document.getElementById("videoOverlay").classList.remove("hidden");
+    document.getElementById("videoFrame").classList.remove("active");
+    document.getElementById("faceBox").classList.remove("active");
+    document.getElementById("recBadge").classList.remove("active");
+    document.getElementById("timerBadge").classList.remove("active");
+    document.getElementById("alertBanner").classList.remove("show");
+    document.getElementById("navBadge").style.display = "none";
+
+    const pill = document.getElementById("sessionPill");
+    const dot = document.getElementById("sessionDot");
+    pill.classList.add("inactive");
+    dot.classList.add("inactive");
+    document.getElementById("sessionPillText").textContent = "Session Inactive";
+    document.getElementById("focusState").textContent = "Waiting...";
+    document.getElementById("focusState").className = "focus-state idle";
+
+    addLog("info", `Session ended — duration: ${document.getElementById("timerBadge").textContent}`);
+}
+
+// ── Notifications ──
+function showPushNotification() {
+    if (Notification.permission === "granted") {
+        new Notification("Focus Alert!", { body: "Your focus is dropping. Time for a quick break?" });
+    }
+}
+
+function showWebsiteNotification(score) {
+    if (!modalVisible) {
+        document.getElementById("interventionModal").classList.add("show");
+        modalVisible = true;
+    }
+}
+
+function closeModal() {
+    document.getElementById("interventionModal").classList.remove("show");
+    modalVisible = false;
+}
+
+function goToIntervention() {
+    window.location.href = "/static/intervention.html";
+}
+
+// ── Log ──
+function addLog(type, message) {
+    const list = document.getElementById("logList");
+
+    // Remove empty state
+    const empty = list.querySelector(".log-empty");
+    if (empty) empty.remove();
+    if (logEvents === 0) list.innerHTML = "";
+
+    logEvents++;
+    document.getElementById("logCount").textContent = logEvents + " event" + (logEvents !== 1 ? "s" : "");
+
+    const now = new Date();
+    const time = now.toTimeString().slice(0, 8);
+
+    const colors = { info: "var(--accent)", warn: "var(--amber)", alert: "var(--red)", error: "var(--red)" };
+    const color = colors[type] || "var(--text-muted)";
+
+    const row = document.createElement("div");
+    row.className = "log-row";
+    row.innerHTML = `
+        <span class="log-time">${time}</span>
+        <div class="log-dot" style="background:${color}"></div>
+        <span class="log-text">${message}</span>
+    `;
+    list.insertBefore(row, list.firstChild);
+}
+
+// ── Nav ──
+function logout() { localStorage.removeItem("access_token"); window.location.href = "/"; }
+function goTo(page) { window.location.href = "/static/" + page; }
+</script>
+</body>
+</html>
