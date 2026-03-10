@@ -511,3 +511,272 @@ Cross-user policy learning
 License
 
 This project is developed for academic and research purposes.
+
+Cloud Deployment and Infrastructure
+Supabase PostgreSQL Integration
+
+The system uses Supabase PostgreSQL as a managed cloud database to persist all application data. Supabase provides a fully hosted PostgreSQL database with built-in authentication, APIs, and monitoring tools.
+
+All user session information and behavioral signals are stored in Supabase, allowing the AI system to analyze attention patterns across multiple study sessions.
+
+Data Stored in Supabase
+
+The following entities are stored in the database:
+
+User Data
+
+User profile information
+
+Authentication metadata (local development)
+
+Session Data
+
+Study session metadata
+
+Session start and end times
+
+Focus Logs
+
+Continuous focus score values
+
+Timestamped focus measurements
+
+Emotion Logs
+
+Detected emotional state
+
+Confidence scores
+
+Timestamped emotion observations
+
+Intervention Logs
+
+Intervention type triggered
+
+Reinforcement learning policy confidence
+
+Reward signal (focus improvement)
+
+Journal Entries
+
+User reflective notes
+
+AI-generated emotional analysis
+
+Stress score and cognitive state
+
+The backend interacts with Supabase using:
+
+SQLAlchemy ORM
+psycopg2 PostgreSQL driver
+
+Database schema creation is handled automatically during backend initialization.
+
+Containerization with Docker
+
+To enable portable deployment, the backend application was containerized using Docker.
+
+Containerization ensures the system can run consistently across different environments including:
+
+Local development
+
+Cloud infrastructure
+
+Container orchestration platforms
+
+Docker Optimization
+
+Initial builds produced extremely large images due to machine learning dependencies.
+
+Key optimizations were applied:
+
+Multi-Stage Docker Builds
+
+Dependencies are installed in a builder stage and only the required runtime libraries are copied into the final container.
+
+CPU-Only PyTorch Installation
+
+GPU libraries were removed to reduce container size.
+
+Minimal Python Base Image
+
+python:3.10-slim
+
+was used instead of the full Python image.
+
+Image Size Reduction
+Stage	Image Size
+Initial Docker build	~10.8 GB
+After dependency optimization	~1.9 GB
+Final optimized container	~480–500 MB
+
+This reduction made the system suitable for deployment on lightweight cloud infrastructure.
+
+Docker Hub Image Distribution
+
+After building the container locally, the image was published to Docker Hub.
+
+Docker Hub acts as a public container registry from which cloud platforms can pull the application image.
+
+Image Repository
+adhi044/emofocusai
+Build and Push Process
+
+Build the Docker image:
+
+docker build -t adhi044/emofocusai:latest .
+
+Push to Docker Hub:
+
+docker push adhi044/emofocusai:latest
+
+Publishing the container enables automated cloud deployment workflows.
+
+Azure Cloud Deployment
+
+The backend system is deployed using Microsoft Azure Container Instances (ACI).
+
+Azure Container Instances allow running Docker containers without managing servers or Kubernetes clusters.
+
+This approach enables fast deployment while keeping infrastructure simple for demonstration and academic purposes.
+
+Azure Deployment Workflow
+
+The deployment process involved several steps:
+
+1. Azure CLI Authentication
+az login
+
+The Azure CLI was used to manage cloud resources directly from the terminal.
+
+2. Resource Group Creation
+
+Azure resources are organized using resource groups.
+
+az group create \
+--name emofocus-rg-sea \
+--location southeastasia
+3. Container Deployment
+
+The container image hosted on Docker Hub is deployed as a container instance.
+
+az container create \
+--resource-group emofocus-rg-sea \
+--name emofocus-ai \
+--image adhi044/emofocusai:latest \
+--os-type Linux \
+--cpu 2 \
+--memory 4 \
+--ports 8000 \
+--dns-name-label emofocus-ai-demo \
+--location southeastasia
+4. Public API Endpoint
+
+After deployment, Azure provides a public endpoint:
+
+http://emofocus-ai-demo.southeastasia.azurecontainer.io:8000
+
+This endpoint exposes the FastAPI backend publicly.
+
+Swagger documentation can be accessed at:
+
+http://emofocus-ai-demo.southeastasia.azurecontainer.io:8000/docs
+Cloud Architecture Overview
+
+The complete system architecture now includes multiple cloud components.
+
+User Browser
+      │
+      ▼
+Azure Container Instance
+(FastAPI Backend)
+      │
+      ▼
+Supabase PostgreSQL
+(Database)
+Responsibilities
+
+Azure Container Instance
+
+Runs the backend API and machine learning logic.
+
+Supabase PostgreSQL
+
+Stores behavioral logs, sessions, and analytics data.
+
+Docker Hub
+
+Hosts the deployable container image.
+
+Infrastructure Challenges and Solutions
+
+During deployment several technical challenges were encountered and resolved.
+
+Large Docker Image Problem
+
+Machine learning libraries such as PyTorch and MediaPipe significantly increased container size.
+
+Solution
+
+Multi-stage Docker builds and CPU-only ML dependencies reduced image size by over 95%.
+
+Docker Push Failures
+
+Large image layers caused repeated push failures.
+
+Solution
+
+Optimizing the container reduced layer sizes and enabled successful uploads.
+
+Azure Region Restrictions
+
+Azure Student subscriptions restrict resource creation to specific regions.
+
+Allowed regions included:
+
+southeastasia
+eastasia
+austriaeast
+koreacentral
+malaysiawest
+
+Deployments outside these regions were blocked by Azure policies.
+
+Container Startup Failures
+
+Early deployments failed due to missing Python dependencies inside the container.
+
+Solution
+
+Dockerfile was updated to install all dependencies from requirements.txt.
+
+Final Deployment Status
+
+The Attention AI backend can now be deployed as a cloud-hosted AI service.
+
+Capabilities of the deployed system include:
+
+Real-time attention monitoring
+
+Emotion recognition
+
+Reinforcement learning intervention engine
+
+Session analytics dashboard
+
+Journal reflection analysis
+
+Cloud-hosted API infrastructure
+
+Summary
+
+The final system demonstrates a complete end-to-end AI application pipeline:
+
+Computer Vision
+Emotion Recognition
+Reinforcement Learning
+Backend API
+Database Storage
+Cloud Deployment
+
+By integrating machine learning, behavioral analytics, and cloud infrastructure, Attention AI becomes a scalable intelligent productivity system capable of adapting interventions based on user attention dynamics.
