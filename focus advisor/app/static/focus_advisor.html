@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>EmoFocus AI | Focus Advisor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+    --bg: #090c10;
+    --surface: #0d1117;
+    --surface-2: #161b22;
+    --border: rgba(255,255,255,0.06);
+    --border-hover: rgba(255,255,255,0.12);
+    --accent: #00d4aa;
+    --accent-dim: rgba(0, 212, 170, 0.08);
+    --accent-glow: rgba(0, 212, 170, 0.2);
+    --text-primary: #e6edf3;
+    --text-secondary: #7d8590;
+    --text-muted: #484f58;
+    --red: #ff4757;
+    --amber: #ffa502;
+    --blue: #4a9eff;
+    --purple: #a78bfa;
+    --sidebar-w: 260px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg); color: var(--text-primary);
+    height: 100vh; display: flex; overflow: hidden;
+}
+body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999;
+}
+
+/* SIDEBAR */
+.sidebar { width: var(--sidebar-w); background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+.sidebar-brand { padding: 28px 24px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+.brand-icon { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; overflow: hidden; }
+.brand-icon::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 60%); }
+.brand-icon svg { width: 16px; height: 16px; color: #000; position: relative; z-index: 1; }
+.brand-name { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; }
+.brand-tag { font-size: 10px; font-weight: 500; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(0,212,170,0.15); padding: 1px 6px; border-radius: 4px; letter-spacing: 0.5px; text-transform: uppercase; margin-left: auto; }
+.nav-section { padding: 20px 12px 8px; }
+.nav-label { font-size: 10px; font-weight: 500; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; padding: 0 10px; margin-bottom: 6px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 7px; font-size: 13.5px; font-weight: 450; color: var(--text-secondary); cursor: pointer; transition: all 0.15s ease; margin-bottom: 2px; text-decoration: none; }
+.nav-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+.nav-item:hover { background: var(--surface-2); color: var(--text-primary); }
+.nav-item.active { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(0,212,170,0.12); }
+.nav-item.active svg { color: var(--accent); }
+.nav-badge { margin-left: auto; font-size: 10px; font-family: 'DM Mono', monospace; font-weight: 500; color: var(--accent); background: var(--accent-dim); padding: 1px 6px; border-radius: 10px; }
+.sidebar-footer { margin-top: auto; padding: 16px 12px; border-top: 1px solid var(--border); }
+.user-card { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background 0.15s; }
+.user-card:hover { background: var(--surface-2); }
+.user-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: white; flex-shrink: 0; }
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: 13px; font-weight: 500; }
+.user-role { font-size: 11px; color: var(--text-muted); }
+
+/* MAIN */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.topbar { height: 64px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 36px; gap: 16px; flex-shrink: 0; background: rgba(9,12,16,0.8); backdrop-filter: blur(12px); }
+.breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
+.breadcrumb .current { color: var(--text-primary); font-weight: 500; }
+.breadcrumb svg { width: 12px; height: 12px; }
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.status-pill { display: flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 12px; font-family: 'DM Mono', monospace; color: var(--text-secondary); }
+.sdot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.sdot.warn { background: var(--amber); }
+.sdot.err { background: var(--red); }
+
+/* CHAT */
+.chat-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.chips-bar { padding: 12px 36px; border-bottom: 1px solid var(--border); display: flex; gap: 8px; flex-wrap: wrap; flex-shrink: 0; background: var(--surface); }
+.chip { background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 12px; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; white-space: nowrap; font-family: 'DM Sans', sans-serif; }
+.chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+.messages { flex: 1; overflow-y: auto; padding: 28px 36px; display: flex; flex-direction: column; gap: 20px; }
+
+.empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; padding: 60px 40px; }
+.empty-icon { width: 60px; height: 60px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+.empty-icon svg { width: 26px; height: 26px; color: var(--accent); }
+.empty-state h2 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+.empty-state p { font-size: 13.5px; color: var(--text-secondary); max-width: 360px; line-height: 1.65; }
+.rag-pill { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-dim); border: 1px solid rgba(0,212,170,0.15); border-radius: 20px; padding: 4px 12px; font-size: 11px; font-weight: 500; color: var(--accent); font-family: 'DM Mono', monospace; }
+.rag-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+
+.msg { display: flex; gap: 12px; animation: slideIn 0.2s ease; }
+@keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.msg.user { flex-direction: row-reverse; align-self: flex-end; max-width: 70%; }
+.msg.bot { align-self: flex-start; max-width: 82%; }
+.av { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; margin-top: 4px; }
+.msg.user .av { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+.msg.bot .av { background: var(--accent-dim); border: 1px solid rgba(0,212,170,0.2); color: var(--accent); font-size: 10px; }
+.bubble { padding: 12px 16px; border-radius: 12px; font-size: 13.5px; line-height: 1.7; }
+.msg.user .bubble { background: rgba(0,212,170,0.08); border: 1px solid rgba(0,212,170,0.15); color: var(--text-primary); border-bottom-right-radius: 4px; }
+.msg.bot .bubble { background: var(--surface-2); border: 1px solid var(--border); color: var(--text-primary); border-bottom-left-radius: 4px; }
+.msg.bot.blocked .bubble { background: rgba(255,71,87,0.05); border-color: rgba(255,71,87,0.2); }
+
+.guard-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,71,87,0.1); border: 1px solid rgba(255,71,87,0.25); border-radius: 6px; padding: 3px 8px; font-size: 11px; font-family: 'DM Mono', monospace; color: var(--red); margin-bottom: 8px; }
+.guard-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--red); }
+.sources { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.src-label { font-size: 11px; color: var(--text-muted); align-self: center; font-family: 'DM Mono', monospace; }
+.src-tag { background: rgba(74,158,255,0.08); border: 1px solid rgba(74,158,255,0.15); border-radius: 5px; padding: 2px 8px; font-size: 11px; font-family: 'DM Mono', monospace; color: var(--blue); }
+.warn-note { margin-top: 10px; padding: 8px 12px; background: rgba(255,165,2,0.06); border-left: 2px solid var(--amber); border-radius: 0 6px 6px 0; font-size: 12px; color: var(--amber); line-height: 1.55; }
+
+.typing { display: flex; gap: 4px; align-items: center; padding: 4px 0; }
+.typing span { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: tp 1.2s infinite; }
+.typing span:nth-child(2) { animation-delay: .2s; }
+.typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes tp { 0%,80%,100% { transform: scale(.75); opacity: .4; } 40% { transform: scale(1.1); opacity: 1; } }
+
+.input-area { border-top: 1px solid var(--border); padding: 18px 36px; background: var(--surface); flex-shrink: 0; }
+.input-wrap { display: flex; gap: 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; transition: border-color 0.2s; }
+.input-wrap:focus-within { border-color: rgba(0,212,170,0.35); }
+textarea { flex: 1; background: none; border: none; outline: none; color: var(--text-primary); font-size: 13.5px; resize: none; max-height: 100px; line-height: 1.55; font-family: 'DM Sans', sans-serif; }
+textarea::placeholder { color: var(--text-muted); }
+.send-btn { width: 32px; height: 32px; background: var(--accent); border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; align-self: flex-end; transition: all 0.15s; flex-shrink: 0; }
+.send-btn:hover { background: #00bfa0; transform: translateY(-1px); }
+.send-btn:disabled { background: var(--surface-2); border: 1px solid var(--border); cursor: not-allowed; transform: none; }
+.send-btn svg { width: 14px; height: 14px; fill: #000; }
+.send-btn:disabled svg { fill: var(--text-muted); }
+.input-hint { font-size: 11px; color: var(--text-muted); text-align: center; margin-top: 8px; }
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M12 2a7 7 0 0 1 7 7c0 3-2 5.5-4.5 6.5V17h-5v-1.5C7 14.5 5 12 5 9a7 7 0 0 1 7-7z"/>
+                <path d="M9 21h6"/>
+            </svg>
+        </div>
+        <span class="brand-name">EmoFocus AI</span>
+        <!-- <span class="brand-tag">Beta</span> -->
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-label">Main</div>
+        <a class="nav-item" href="/static/dashboard.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            Dashboard
+        </a>
+        <a class="nav-item" href="/static/monitor.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            Live Monitor
+        </a>
+        <a class="nav-item" href="/static/analytics.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 20h18M7 14v6M11 10v10M15 6v14M19 3v17"/></svg>
+            Analytics
+        </a>
+    </div>
+
+    <div class="nav-section">
+        <div class="nav-label">Tools</div>
+        <a class="nav-item" href="/static/journal.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h6"/></svg>
+            Journal
+        </a>
+        <a class="nav-item" href="/static/focus_boosters.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Focus Boosters
+        </a>
+        <a class="nav-item active" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Focus Advisor
+            <span class="nav-badge">RAG</span>
+        </a>
+    </div>
+
+    <div class="sidebar-footer">
+        <div class="user-card">
+            <div class="user-avatar" id="uavatar">U</div>
+            <div class="user-info">
+                <div class="user-name" id="uname">Akash</div>
+                <div class="user-role">Focus Learner</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+    <div class="topbar">
+        <div class="breadcrumb">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+            <span>Tools</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+            <span class="current">Focus Advisor</span>
+        </div>
+        <div class="topbar-right">
+            <div class="status-pill">
+                <div class="sdot" id="sdot"></div>
+                <span id="stext">Connecting...</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="chat-wrap">
+        <div class="chips-bar">
+            <div class="chip" onclick="qa(this)">Why do I lose focus after lunch?</div>
+            <div class="chip" onclick="qa(this)">How long should study sessions be?</div>
+            <div class="chip" onclick="qa(this)">Does music help concentration?</div>
+            <div class="chip" onclick="qa(this)">Best way to reset focus quickly</div>
+            <div class="chip" onclick="qa(this)">How does phone affect attention?</div>
+            <div class="chip" onclick="qa(this)">What is deep work?</div>
+        </div>
+
+        <div class="messages" id="msgs">
+            <div class="empty-state" id="empty">
+                <div class="empty-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <h2>Ask me about focus</h2>
+                <p>Trained on neuroscience research and productivity science. Ask about attention, concentration, study strategies, and cognitive performance.</p>
+                <div class="rag-pill"><div class="rag-dot"></div>RAG &middot; ChromaDB &middot; Llama 3 &middot; Guardrails</div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-wrap">
+                <textarea id="inp" placeholder="Ask about focus, attention, productivity, cognitive performance..." rows="1"
+                    onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();go()}"
+                    oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
+                <button class="send-btn" id="btn" onclick="go()">
+                    <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+                </button>
+            </div>
+            <div class="input-hint">Enter to send &middot; Shift+Enter for new line</div>
+        </div>
+    </div>
+</div>
+
+<script>
+const history = [];
+let busy = false;
+const username = localStorage.getItem('username') || 'User';
+document.getElementById('uname').textContent = username;
+document.getElementById('uavatar').textContent = username.charAt(0).toUpperCase();
+
+const esc = t => String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const fmt = t => esc(t)
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g,'<em>$1</em>')
+    .replace(/^- (.+)/gm,'&bull; $1')
+    .replace(/\n/g,'<br>');
+
+const msgs = () => document.getElementById('msgs');
+const scrollB = () => { const m = msgs(); m.scrollTop = m.scrollHeight; };
+const clearEmpty = () => { const e = document.getElementById('empty'); if(e) e.remove(); };
+
+function addUser(text) {
+    clearEmpty();
+    const d = document.createElement('div');
+    d.className = 'msg user';
+    d.innerHTML = `<div class="av">${username.charAt(0).toUpperCase()}</div><div class="bubble">${esc(text)}</div>`;
+    msgs().appendChild(d); scrollB();
+}
+
+function addTyping() {
+    clearEmpty();
+    const d = document.createElement('div');
+    d.id = 'tp'; d.className = 'msg bot';
+    d.innerHTML = `<div class="av">AI</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+    msgs().appendChild(d); scrollB();
+}
+
+function rmTyping() { const t = document.getElementById('tp'); if(t) t.remove(); }
+
+function addBot(data) {
+    const d = document.createElement('div');
+    d.className = 'msg bot' + (data.blocked ? ' blocked' : '');
+    let html = '';
+    if (data.blocked) {
+        const lbl = data.block_category === 'harmful_output_detected' ? 'Response filtered' : 'Guardrail triggered';
+        html += `<div class="guard-badge"><div class="guard-dot"></div>${lbl}</div>`;
+    }
+    let ans = data.answer || '';
+    let warn = '';
+    if (ans.includes('\n\n*Note:')) {
+        const [a, n] = ans.split('\n\n*Note:');
+        ans = a; warn = n.replace(/\*$/, '').trim();
+    }
+    html += fmt(ans);
+    if (warn) html += `<div class="warn-note">&#9888;&nbsp;${esc(warn)}</div>`;
+    if (!data.blocked && data.sources && data.sources.length > 0) {
+        const tags = data.sources.map(s => `<span class="src-tag">${esc(s)}</span>`).join('');
+        html += `<div class="sources"><span class="src-label">sources</span>${tags}</div>`;
+    }
+    d.innerHTML = `<div class="av">AI</div><div class="bubble">${html}</div>`;
+    msgs().appendChild(d); scrollB();
+}
+
+async function go() {
+    const inp = document.getElementById('inp');
+    const q = inp.value.trim();
+    if (!q || busy) return;
+    busy = true;
+    document.getElementById('btn').disabled = true;
+    inp.value = ''; inp.style.height = 'auto';
+    addUser(q);
+addTyping();
+// DON'T push to history yet
+
+try {
+    // const res = await fetch('/api/v1/chat/ask', {
+    const res = await fetch('http://127.0.0.1:8001/api/v1/chat/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q, chat_history: history })
+    });
+    const data = await res.json();
+    rmTyping();  // was rmTyping()
+    addBot(data);
+    
+    // Only add to history if NOT blocked
+    // This way blocked messages never contaminate future LLM context
+    if (!data.blocked) {
+        history.push({ role: 'user', content: q });
+        history.push({ role: 'assistant', content: data.answer });
+    }
+    } catch {
+        rmTyping();
+        addBot({ answer: 'Connection error — please check the server is running.', sources: [], blocked: false });
+    }
+    busy = false;
+    document.getElementById('btn').disabled = false;
+    inp.focus();
+}
+
+function qa(el) { document.getElementById('inp').value = el.textContent.trim(); go(); }
+
+async function checkHealth() {
+    try {
+        const d = await (await fetch('http://127.0.0.1:8001/api/v1/chat/health')).json();
+        // const d = await (await fetch('/api/v1/chat/health')).json();
+        const dot = document.getElementById('sdot');
+        const txt = document.getElementById('stext');
+        if (d.vector_store_populated) {
+            dot.className = 'sdot'; txt.textContent = 'Knowledge base ready';
+        } else {
+            dot.className = 'sdot warn'; txt.textContent = 'No knowledge base loaded';
+        }
+    } catch {
+        document.getElementById('sdot').className = 'sdot err';
+        document.getElementById('stext').textContent = 'Server offline';
+    }
+}
+checkHealth();
+</script>
+</body>
+</html>
